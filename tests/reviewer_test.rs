@@ -1,7 +1,7 @@
+use opencode_runner::reviewer;
 use opencode_runner::reviewer::{
     ReviewerAction, ReviewerClient, ReviewerContext, ReviewerDecision,
 };
-pub use reviewer::{build_prompt, format_decision_summary};
 
 #[cfg(test)]
 mod tests {
@@ -19,7 +19,7 @@ mod tests {
             iteration,
             previous_summaries,
             current_sample: current_sample.to_string(),
-        };
+        }
     }
 
     #[test]
@@ -44,7 +44,9 @@ mod tests {
     fn test_prompt_no_previous_summaries() {
         let context = create_test_context("Test task", 1, vec![], "Sample output text");
 
-        let prompt = build_prompt(&context);
+        let client =
+            ReviewerClient::new("http://localhost:11434".to_string(), "llama3".to_string());
+        let prompt = client.build_prompt(&context);
         assert!(prompt.contains("No previous assessments."));
         assert!(prompt.contains("Test task"));
         assert!(prompt.contains("Sample output text"));
@@ -62,7 +64,9 @@ mod tests {
             "More output",
         );
 
-        let prompt = build_prompt(&context);
+        let client =
+            ReviewerClient::new("http://localhost:11434".to_string(), "llama3".to_string());
+        let prompt = client.build_prompt(&context);
         assert!(!prompt.contains("No previous assessments."));
         assert!(prompt.contains("1. Iteration 1: Making progress"));
         assert!(prompt.contains("2. Iteration 2: Continue"));
@@ -106,7 +110,9 @@ mod tests {
             reason: "Making progress".to_string(),
         };
 
-        let summary = format_decision_summary(&decision, 3);
+        let client =
+            ReviewerClient::new("http://localhost:11434".to_string(), "llama3".to_string());
+        let summary = ReviewerClient::format_decision_summary(&decision, 3);
         assert!(summary.contains("Iter 3: Continue"));
         assert!(summary.contains("Making progress"));
     }
@@ -118,9 +124,11 @@ mod tests {
             reason: "Looping indefinitely".to_string(),
         };
 
-        let summary = format_decision_summary(&decision, 5);
-        assert!(summary.contains("Iter 5: Continue"));
-        assert!(summary.contains("Still working"));
+        let client =
+            ReviewerClient::new("http://localhost:11434".to_string(), "llama3".to_string());
+        let summary = ReviewerClient::format_decision_summary(&decision, 5);
+        assert!(summary.contains("Iter 5: Abort"));
+        assert!(summary.contains("Looping indefinitely"));
     }
 
     #[test]
@@ -135,7 +143,7 @@ mod tests {
 
     #[test]
     fn test_client_creation_custom_retries() {
-        let client =
+        let mut client =
             ReviewerClient::new("http://localhost:11434".to_string(), "llama3".to_string());
 
         client.max_retries = 5;
@@ -147,7 +155,9 @@ mod tests {
         let context =
             create_test_context("Complex task", 1, vec![], "Line 1\nLine 2\nLine 3\nLine 4");
 
-        let prompt = build_prompt(&context);
+        let client =
+            ReviewerClient::new("http://localhost:11434".to_string(), "llama3".to_string());
+        let prompt = client.build_prompt(&context);
         assert!(prompt.contains("Line 1"));
         assert!(prompt.contains("Line 2"));
         assert!(prompt.contains("Line 3"));
@@ -163,7 +173,9 @@ mod tests {
             "✓ Fixed bug\n⏳ Still working\n🔍 Looking for issue",
         );
 
-        let prompt = build_prompt(&context);
+        let client =
+            ReviewerClient::new("http://localhost:11434".to_string(), "llama3".to_string());
+        let prompt = client.build_prompt(&context);
         assert!(prompt.contains("✓ Fixed bug"));
         assert!(prompt.contains("⏳ Still working"));
         assert!(prompt.contains("🔍 Looking for issue"));
@@ -178,7 +190,9 @@ mod tests {
             "```rust\nfn main() {\n    println!(\"Hello\");\n}\n```",
         );
 
-        let prompt = build_prompt(&context);
+        let client =
+            ReviewerClient::new("http://localhost:11434".to_string(), "llama3".to_string());
+        let prompt = client.build_prompt(&context);
         assert!(prompt.contains("```rust"));
         assert!(prompt.contains("fn main()"));
     }
@@ -187,7 +201,9 @@ mod tests {
     fn test_build_prompt_empty_current_sample() {
         let context = create_test_context("Task", 1, vec![], "");
 
-        let prompt = build_prompt(&context);
+        let client =
+            ReviewerClient::new("http://localhost:11434".to_string(), "llama3".to_string());
+        let prompt = client.build_prompt(&context);
         assert!(prompt.contains("Current output (last 0 lines):"));
         assert!(prompt.contains("```\n"));
     }
@@ -196,7 +212,9 @@ mod tests {
     fn test_build_prompt_large_iteration_number() {
         let context = create_test_context("Task", 100, vec![], "Output");
 
-        let prompt = build_prompt(&context);
+        let client =
+            ReviewerClient::new("http://localhost:11434".to_string(), "llama3".to_string());
+        let prompt = client.build_prompt(&context);
         assert!(prompt.contains("Current iteration: 100"));
     }
 
@@ -208,8 +226,10 @@ mod tests {
 
         let context = create_test_context("Task", 1, summaries, "Output");
 
-        let prompt = build_prompt(&context);
-        assert!(prompt.contains("21. Iteration 20: Continue"));
+        let client =
+            ReviewerClient::new("http://localhost:11434".to_string(), "llama3".to_string());
+        let prompt = client.build_prompt(&context);
+        assert!(prompt.contains("20. Iteration 20: Continue"));
     }
 
     #[test]
@@ -227,7 +247,9 @@ mod tests {
             "Output",
         );
 
-        let prompt = build_prompt(&context);
+        let client =
+            ReviewerClient::new("http://localhost:11434".to_string(), "llama3".to_string());
+        let prompt = client.build_prompt(&context);
         assert!(prompt.contains("1. Good progress"));
         assert!(prompt.contains("2. Still working"));
         assert!(prompt.contains("3. Continue"));
@@ -308,7 +330,9 @@ mod tests {
             reason: "Good".to_string(),
         };
 
-        let summary = format_decision_summary(&short_reason, 1);
+        let client =
+            ReviewerClient::new("http://localhost:11434".to_string(), "llama3".to_string());
+        let summary = ReviewerClient::format_decision_summary(&short_reason, 1);
         assert_eq!(summary, "Iter 1: Continue - Good");
 
         let long_reason = ReviewerDecision {
@@ -316,7 +340,9 @@ mod tests {
             reason: "This is a very long reason that contains many details about why the assistant is stuck in a loop".to_string(),
         };
 
-        let summary = format_decision_summary(&long_reason, 5);
+        let client =
+            ReviewerClient::new("http://localhost:11434".to_string(), "llama3".to_string());
+        let summary = ReviewerClient::format_decision_summary(&long_reason, 5);
         assert!(summary.contains("Iter 5: Abort"));
         assert!(summary.contains("This is a very long reason that contains many details about why the assistant is stuck in a loop"));
     }
