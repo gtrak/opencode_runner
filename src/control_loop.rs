@@ -1,4 +1,5 @@
 use crate::{
+    config::ControlConfig,
     client::OpenCodeClient,
     reviewer::{ReviewerClient, ReviewerContext, ReviewerDecision, ReviewerAction},
     sampler::Sampler,
@@ -15,17 +16,8 @@ use opencode_rs::sse::SseSubscription;
 #[cfg(windows)]
 use crate::opencode_stub::SseSubscription;
 
-/// Configuration for the control loop
-pub struct ControlConfig {
-    /// The task description
-    pub task: String,
-    /// Maximum iterations before forcing abort
-    pub max_iterations: usize,
-    /// Timeout for inactivity (no events)
-    pub inactivity_timeout: Duration,
-}
-
 /// Result of a control loop run
+#[derive(Debug)]
 pub enum RunResult {
     /// Task completed successfully
     Completed,

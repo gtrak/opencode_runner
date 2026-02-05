@@ -5,6 +5,8 @@ use tracing::{info, warn};
 
 mod client;
 mod control_loop;
+mod config;
+mod environment;
 mod reviewer;
 mod sampler;
 mod server;
@@ -17,7 +19,9 @@ mod opencode_stub;
 mod tui;
 
 use client::OpenCodeClient;
-use control_loop::{ControlConfig, ControlLoop, RunResult};
+use config::ControlConfig;
+use control_loop::{ControlLoop, RunResult};
+use environment::load_config_from_env;
 use reviewer::ReviewerClient;
 use sampler::Sampler;
 use server::ServerManager;
@@ -111,11 +115,8 @@ async fn main() -> Result<()> {
     let sampler = Sampler::new(100);
     let state = State::new();
 
-    let config = ControlConfig {
-        task: args.task.clone(),
-        max_iterations: args.max_iterations,
-        inactivity_timeout: tokio::time::Duration::from_secs(args.inactivity_timeout),
-    };
+    // Create control loop configuration
+    let config = ControlConfig::from_args(&args.task, args.max_iterations, args.inactivity_timeout)?;
 
     // Create control loop
     let mut control_loop = ControlLoop::new(
