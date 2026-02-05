@@ -12,6 +12,14 @@
 
 **Requirements:** All 69 v1 requirements (verification focus)
 
+**Plans:** 5 plans in 2 waves
+
+- [ ] 01-01-PLAN.md — Audit CLI and Server (20 requirements)
+- [ ] 01-02-PLAN.md — Audit Client and Sampler (16 requirements)
+- [ ] 01-03-PLAN.md — Audit Reviewer and State (15 requirements)
+- [ ] 01-04-PLAN.md — Audit Control Loop and TUI (22 requirements)
+- [ ] 01-05-PLAN.md — Compile audit reports and corrective tasks
+
 **Success Criteria:**
 1. Every component from plan.md exists with correct interface
 2. All CLI arguments from spec are implemented
@@ -155,10 +163,12 @@
 
 ## Current Position
 
-**Current Phase:** Not started
-**Next Phase:** Phase 1 - Specification Audit
-**Status:** Ready to begin refinement
+**Current Phase:** Phase 1 - Specification Audit
+**Phase Status:** Planned (5 plans ready)
+**Next Phase:** Phase 2 - Testing Infrastructure
+**Status:** Ready to execute Phase 1
 
 ---
 
 *Roadmap created: 2026-02-05*
+*Last updated: 2026-02-05 — Phase 1 planned*
