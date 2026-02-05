@@ -2,26 +2,14 @@ use anyhow::{Context, Result};
 use tracing::{debug, info, warn};
 
 // Platform-specific imports
-#[cfg(unix)]
 use opencode_rs::{
-    types::{
-        event::Event,
-        session::{CreateSessionRequest, Session},
-        message::{PromptRequest, Part, PartContent},
-    },
-    Client as OpencodeClient,
     sse::SseSubscription,
-};
-
-#[cfg(windows)]
-use crate::opencode_stub::{
     types::{
         event::Event,
+        message::{Part, PartContent, PromptRequest},
         session::{CreateSessionRequest, Session},
-        message::{PromptRequest, Part, PartContent},
     },
     Client as OpencodeClient,
-    SseSubscription,
 };
 
 pub struct OpenCodeClient {
@@ -58,7 +46,8 @@ impl OpenCodeClient {
             ..Default::default()
         };
 
-        let session = self.inner
+        let session = self
+            .inner
             .sessions()
             .create(&request)
             .await
@@ -75,7 +64,8 @@ impl OpenCodeClient {
             ..Default::default()
         };
 
-        let response = self.inner
+        let response = self
+            .inner
             .messages()
             .prompt_async(&session.id, &prompt_request)
             .await
@@ -90,7 +80,8 @@ impl OpenCodeClient {
     pub async fn subscribe(&self, session_id: &str) -> Result<SseSubscription> {
         debug!("Subscribing to session events for {}", session_id);
 
-        let subscription = self.inner
+        let subscription = self
+            .inner
             .subscribe_session(session_id)
             .await
             .context("Failed to subscribe to session events")?;
@@ -146,9 +137,7 @@ pub fn extract_event_text(event: &Event) -> Option<String> {
 /// Helper function to extract tool call info from an event
 pub fn extract_tool_call(event: &Event) -> Option<(String, serde_json::Value)> {
     match event {
-        Event::ToolCall { name, params, .. } => {
-            Some((name.clone(), params.clone()))
-        }
+        Event::ToolCall { name, params, .. } => Some((name.clone(), params.clone())),
         _ => None,
     }
 }

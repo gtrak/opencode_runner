@@ -1,10 +1,13 @@
 use std::collections::VecDeque;
 
-use crate::sampler::{Sampler, SamplerEvent};
+use crate::sampler::Sampler;
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // Platform-specific imports for testing
+    use opencode_rs::types::event::Event as TestEvent;
 
     // Test basic sampler functionality
     #[test]

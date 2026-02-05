@@ -4,16 +4,13 @@ use std::path::PathBuf;
 use tracing::{info, warn};
 
 mod client;
-mod control_loop;
 mod config;
+mod control_loop;
 mod environment;
 mod reviewer;
 mod sampler;
 mod server;
 mod state;
-
-#[cfg(windows)]
-mod opencode_stub;
 
 #[cfg(feature = "tui")]
 mod tui;
@@ -89,12 +86,8 @@ async fn main() -> Result<()> {
 
     // Spawn the OpenCode server
     info!("Spawning OpenCode server...");
-    let server = ServerManager::spawn(
-        &args.working_dir,
-        &args.worker_model,
-        &args.extra_args,
-    )
-    .await?;
+    let server =
+        ServerManager::spawn(&args.working_dir, &args.worker_model, &args.extra_args).await?;
 
     info!("Server spawned on port {}", server.port());
 
@@ -107,25 +100,17 @@ async fn main() -> Result<()> {
     info!("Connected to OpenCode server");
 
     // Create components
-    let reviewer = ReviewerClient::new(
-        args.reviewer_url,
-        args.reviewer_model,
-    );
+    let reviewer = ReviewerClient::new(args.reviewer_url, args.reviewer_model);
 
     let sampler = Sampler::new(100);
     let state = State::new();
 
     // Create control loop configuration
-    let config = ControlConfig::from_args(&args.task, args.max_iterations, args.inactivity_timeout)?;
+    let config =
+        ControlConfig::from_args(&args.task, args.max_iterations, args.inactivity_timeout)?;
 
     // Create control loop
-    let mut control_loop = ControlLoop::new(
-        client,
-        reviewer,
-        sampler,
-        state,
-        config,
-    );
+    let mut control_loop = ControlLoop::new(client, reviewer, sampler, state, config);
 
     // Run in TUI or headless mode
     let result = if args.headless {
@@ -183,7 +168,7 @@ async fn run_tui_mode(mut control_loop: ControlLoop) -> Result<RunResult> {
         let ui_state = ui_state.clone();
         tokio::spawn(async move {
             let result = control_loop.run(Some(event_sender)).await;
-            
+
             // Update final state
             if let Ok(ref run_result) = result {
                 let mut state = ui_state.lock().await;
@@ -202,7 +187,7 @@ async fn run_tui_mode(mut control_loop: ControlLoop) -> Result<RunResult> {
                     }
                 }
             }
-            
+
             result
         })
     };

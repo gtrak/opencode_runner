@@ -1,11 +1,31 @@
 use std::collections::VecDeque;
 use tracing::trace;
-
-// Platform-specific imports
-#[cfg(windows)]
-use crate::opencode_stub::types::event::Event;
-#[cfg(unix)]
 use opencode_rs::types::event::Event;
+
+// Mock event type for testing
+#[cfg(test)]
+#[derive(Debug, Clone)]
+pub enum SamplerEvent {
+    PartAdded {
+        text: String,
+    },
+    PartUpdated {
+        delta: String,
+    },
+    ToolCall {
+        name: String,
+        params: serde_json::Value,
+    },
+    ToolResult {
+        result: serde_json::Value,
+    },
+    Error {
+        error: String,
+    },
+    Thinking {
+        thought: String,
+    },
+}
 
 /// Sampler that captures and buffers worker output
 /// Keeps only the last N lines for review
@@ -131,56 +151,3 @@ fn extract_text_content(
 
     match content {
         PartContent::Text(text) => Some(text.clone()),
-        _ => None,
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_sampler_basic() {
-        let mut sampler = Sampler::new(5);
-
-        sampler.add_line("Line 1");
-        sampler.add_line("Line 2");
-        sampler.add_line("Line 3");
-
-        assert_eq!(sampler.line_count(), 3);
-        assert!(sampler.sample().contains("Line 1"));
-        assert!(sampler.sample().contains("Line 2"));
-        assert!(sampler.sample().contains("Line 3"));
-    }
-
-    #[test]
-    fn test_sampler_overflow() {
-        let mut sampler = Sampler::new(3);
-
-        sampler.add_line("Line 1");
-        sampler.add_line("Line 2");
-        sampler.add_line("Line 3");
-        sampler.add_line("Line 4");
-        sampler.add_line("Line 5");
-
-        assert_eq!(sampler.line_count(), 3);
-        let sample = sampler.sample();
-        assert!(!sample.contains("Line 1")); // Should be evicted
-        assert!(!sample.contains("Line 2")); // Should be evicted
-        assert!(sample.contains("Line 3"));
-        assert!(sample.contains("Line 4"));
-        assert!(sample.contains("Line 5"));
-    }
-
-    #[test]
-    fn test_sampler_empty_lines() {
-        let mut sampler = Sampler::new(5);
-
-        sampler.add_line("Line 1");
-        sampler.add_line("");
-        sampler.add_line("   ");
-        sampler.add_line("Line 2");
-
-        assert_eq!(sampler.line_count(), 2);
-    }
-}
