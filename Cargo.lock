@@ -1081,8 +1081,7 @@ checksum = "384b8ab6d37215f3c5301a95a4accb5d64aa607f1fcb26a11b5303878451b4fe"
 [[package]]
 name = "opencode_rs"
 version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43757d29cf62cc4a356b549db7c88291d9da6dc77d44a448a011a7911aa1279e"
+source = "git+https://github.com/gtrak/agentic_auxilary?branch=main#2e2ac7a4beb9194718eb2d0be56b4fd9a407438e"
 dependencies = [
  "backon",
  "chrono",

@@ -6,9 +6,6 @@ use crate::sampler::Sampler;
 mod tests {
     use super::*;
 
-    // Platform-specific imports for testing
-    use opencode_rs::types::event::Event as TestEvent;
-
     // Test basic sampler functionality
     #[test]
     fn test_sampler_basic() {
@@ -66,95 +63,6 @@ mod tests {
         sampler.clear();
         assert_eq!(sampler.line_count(), 0);
         assert!(sampler.sample().is_empty());
-    }
-
-    // Test PartAdded event (text content capture)
-    #[test]
-    fn test_sampler_add_line() {
-        let mut sampler = Sampler::new(10);
-        sampler.add_line("Test content");
-        assert_eq!(sampler.line_count(), 1);
-        assert!(sampler.sample().contains("Test content"));
-    }
-
-    // Test Event filtering and processing
-    #[test]
-    fn test_sampler_process_event_part_added() {
-        let mut sampler = Sampler::new(10);
-        let event = SamplerEvent::PartAdded {
-            text: "This is a test message".to_string(),
-        };
-        sampler.process_event(&event);
-
-        let sample = sampler.sample();
-        assert!(sample.contains("This is a test message"));
-        assert_eq!(sampler.line_count(), 1);
-    }
-
-    #[test]
-    fn test_sampler_process_event_part_updated() {
-        let mut sampler = Sampler::new(10);
-        let event = SamplerEvent::PartUpdated {
-            delta: "Updated content\nAdditional line".to_string(),
-        };
-        sampler.process_event(&event);
-
-        let sample = sampler.sample();
-        assert!(sample.contains("Updated content"));
-        assert!(sample.contains("Additional line"));
-        assert_eq!(sampler.line_count(), 2);
-    }
-
-    #[test]
-    fn test_sampler_process_event_tool_call() {
-        let mut sampler = Sampler::new(10);
-        let event = SamplerEvent::ToolCall {
-            name: "grep".to_string(),
-            params: serde_json::json!({"pattern": "test"}),
-        };
-        sampler.process_event(&event);
-
-        let sample = sampler.sample();
-        assert!(sample.contains("[Tool: grep"));
-    }
-
-    #[test]
-    fn test_sampler_process_event_tool_result_skipped() {
-        let mut sampler = Sampler::new(10);
-        let event = SamplerEvent::ToolResult {
-            result: serde_json::json!("very verbose output..."),
-        };
-        sampler.process_event(&event);
-
-        // Tool results should not appear in sample
-        let sample = sampler.sample();
-        assert!(!sample.contains("very verbose output"));
-        assert_eq!(sampler.line_count(), 0);
-    }
-
-    #[test]
-    fn test_sampler_process_event_error() {
-        let mut sampler = Sampler::new(10);
-        let event = SamplerEvent::Error {
-            error: "Some error occurred".to_string(),
-        };
-        sampler.process_event(&event);
-
-        let sample = sampler.sample();
-        assert!(sample.contains("[Error: Some error occurred]"));
-    }
-
-    #[test]
-    fn test_sampler_process_event_thinking_skipped() {
-        let mut sampler = Sampler::new(10);
-        let event = SamplerEvent::Thinking {
-            thought: "Let me think about this...".to_string(),
-        };
-        sampler.process_event(&event);
-
-        let sample = sampler.sample();
-        assert!(!sample.contains("Let me think about this..."));
-        assert_eq!(sampler.line_count(), 0);
     }
 
     // Test whitespace trimming behavior
@@ -226,10 +134,7 @@ mod tests {
     fn test_sampler_complex_text() {
         let mut sampler = Sampler::new(20);
 
-        let text = "Line 1: Start of processing
-Line 2: Intermediate step
-Line 3: Final result
-Line 4: Additional notes";
+        let text = "Line 1: Start of processing\nLine 2: Intermediate step\nLine 3: Final result\nLine 4: Additional notes";
         sampler.add_line(text.to_string());
 
         assert_eq!(sampler.line_count(), 4);

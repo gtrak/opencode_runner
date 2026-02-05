@@ -7,7 +7,7 @@ edition = "2021"
 # Core async runtime
 tokio = { version = "1.35", features = ["full"] }
 futures = "0.3"
-opencode_rs = "0.1"
+opencode_rs = { git = "https://github.com/gtrak/agentic_auxilary", branch = "main", package = "opencode_rs" }
 
 # HTTP client for reviewer
 reqwest = { version = "0.12", features = ["json"] }

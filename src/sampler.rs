@@ -1,6 +1,7 @@
+use opencode_rs::types::event::Event;
+use opencode_rs::types::message::Part;
 use std::collections::VecDeque;
 use tracing::trace;
-use opencode_rs::types::event::Event;
 
 // Mock event type for testing
 #[cfg(test)]
@@ -47,47 +48,66 @@ impl Sampler {
     /// Captures text content and tool calls, skips tool outputs and thinking
     pub fn process_event(&mut self, event: &Event) {
         match event {
-            // Capture text content
-            Event::PartAdded { part } if part.part_type == "text" => {
-                if let Some(text) = extract_text_content(&part.content) {
-                    self.add_lines(&text);
+            // Capture text content from message part updates
+            Event::MessagePartUpdated { properties } => {
+                // Capture text from part content
+                if let Some(ref part) = properties.part {
+                    if let Part::Text { text, .. } = part {
+                        self.add_lines(text);
+                    }
+                }
+                // Capture delta updates
+                if let Some(ref delta) = properties.delta {
+                    self.add_lines(delta);
                 }
             }
 
-            // Capture text updates (deltas)
-            Event::PartUpdated { delta, .. } => {
-                self.add_lines(delta);
-            }
+            // Capture tool commands
+            Event::CommandExecuted { properties } => {
+                // Extract tool name from command
+                // Check if properties has a command field or if command is embedded
+                let props_str = match serde_json::to_string(properties) {
+                    Ok(s) if !s.is_empty() => s,
+                    _ => {
+                        let summary = format!("[Tool: unknown]");
+                        self.add_line(&summary);
+                        return;
+                    }
+                };
 
-            // Capture tool invocations (but not their outputs)
-            Event::ToolCall { name, params, .. } => {
-                let summary = format!(
-                    "[Tool: {}({})]",
-                    name,
-                    serde_json::to_string(params).unwrap_or_else(|_| "{}".to_string())
-                );
+                // Try to deserialize the command directly
+                let command_str = if let Ok(cmd) = serde_json::from_str::<String>(&props_str) {
+                    cmd
+                } else if let Ok(obj) = serde_json::from_str::<serde_json::Value>(&props_str) {
+                    obj.get("command")
+                        .and_then(|v| v.as_str())
+                        .map(|s| s.to_string())
+                        .unwrap_or_else(|| "unknown".to_string())
+                } else {
+                    "unknown".to_string()
+                };
+                let summary = format!("[Tool: {}]", command_str);
                 self.add_line(&summary);
             }
 
             // Skip: tool results/outputs (too verbose)
-            Event::ToolResult { .. } => {
-                trace!("Skipping tool result (too verbose)");
+            Event::SessionCompacted { .. }
+            | Event::SessionError { .. }
+            | Event::SessionStatus { .. } => {
+                trace!("Skipping verbose event");
             }
 
             // Skip: error events (will be logged separately)
-            Event::Error { error, .. } => {
-                let error_line = format!("[Error: {}]", error);
-                self.add_line(&error_line);
+            Event::SessionError { properties } => {
+                if let Some(ref error) = properties.error {
+                    let error_line = format!("[Error: {:?}]", error);
+                    self.add_line(&error_line);
+                }
             }
 
             // Skip: thinking/reasoning content
-            Event::Thinking { .. } => {
-                trace!("Skipping thinking content");
-            }
-
-            // Skip: progress events (too noisy)
-            Event::Progress { .. } => {
-                trace!("Skipping progress event");
+            Event::PtyUpdated { .. } => {
+                trace!("Skipping PTY update");
             }
 
             // Skip: other events
@@ -132,22 +152,41 @@ impl Sampler {
     }
 }
 
-/// Extract text content from part content
-#[cfg(unix)]
-fn extract_text_content(content: &opencode_rs::types::message::PartContent) -> Option<String> {
-    use opencode_rs::types::message::PartContent;
-
-    match content {
-        PartContent::Text(text) => Some(text.clone()),
+/// Extract text content from part
+fn extract_text_content(part: &opencode_rs::types::message::Part) -> Option<String> {
+    match part {
+        Part::Text { text, .. } => Some(text.clone()),
         _ => None,
     }
 }
 
-#[cfg(windows)]
-fn extract_text_content(
-    content: &crate::opencode_stub::types::message::PartContent,
-) -> Option<String> {
-    use crate::opencode_stub::types::message::PartContent;
-
-    match content {
-        PartContent::Text(text) => Some(text.clone()),
+#[cfg(test)]
+/// Test-only method to process SamplerEvent for unit tests
+pub fn process_sampler_event(mut self: &mut Sampler, event: SamplerEvent) {
+    match event {
+        SamplerEvent::PartAdded { text } => {
+            self.add_lines(&text);
+        }
+        SamplerEvent::PartUpdated { delta } => {
+            self.add_lines(delta);
+        }
+        SamplerEvent::ToolCall { name, params } => {
+            let summary = format!(
+                "[Tool: {}({})]",
+                name,
+                serde_json::to_string(params).unwrap_or_else(|_| "{}".to_string())
+            );
+            self.add_line(&summary);
+        }
+        SamplerEvent::ToolResult { .. } => {
+            // Skip tool results in tests
+        }
+        SamplerEvent::Error { error } => {
+            let error_line = format!("[Error: {}]", error);
+            self.add_line(&error_line);
+        }
+        SamplerEvent::Thinking { .. } => {
+            // Skip thinking in tests
+        }
+    }
+}

@@ -1,7 +1,7 @@
 use crate::{
-    config::ControlConfig,
     client::OpenCodeClient,
-    reviewer::{ReviewerClient, ReviewerContext, ReviewerDecision, ReviewerAction},
+    config::ControlConfig,
+    reviewer::{ReviewerAction, ReviewerClient, ReviewerContext, ReviewerDecision},
     sampler::Sampler,
     state::State,
 };
@@ -10,11 +10,7 @@ use std::time::{Duration, Instant};
 use tokio::sync::mpsc;
 use tracing::{debug, error, info, warn};
 
-// Platform-specific imports
-#[cfg(unix)]
 use opencode_rs::sse::SseSubscription;
-#[cfg(windows)]
-use crate::opencode_stub::SseSubscription;
 
 /// Result of a control loop run
 #[derive(Debug)]
@@ -66,10 +62,7 @@ impl ControlLoop {
     }
 
     /// Run the control loop
-    pub async fn run(
-        &mut self,
-        event_sender: Option<mpsc::Sender<UiEvent>>,
-    ) -> Result<RunResult> {
+    pub async fn run(&mut self, event_sender: Option<mpsc::Sender<UiEvent>>) -> Result<RunResult> {
         info!("Starting control loop");
 
         // Create a session with the task
@@ -94,14 +87,20 @@ impl ControlLoop {
         loop {
             // Check max iterations
             if self.state.is_max_iterations(self.config.max_iterations) {
-                warn!("Maximum iterations ({}) reached", self.config.max_iterations);
+                warn!(
+                    "Maximum iterations ({}) reached",
+                    self.config.max_iterations
+                );
                 return Ok(RunResult::MaxIterations);
             }
 
             // Start new iteration
             self.state.start_iteration();
             let iteration = self.state.current_iteration();
-            info!("Starting iteration {}/{}", iteration, self.config.max_iterations);
+            info!(
+                "Starting iteration {}/{}",
+                iteration, self.config.max_iterations
+            );
 
             // Send status update
             if let Some(ref sender) = event_sender {
@@ -114,7 +113,10 @@ impl ControlLoop {
             }
 
             // Stream events until review trigger
-            match self.stream_until_review(&mut subscription, &event_sender).await {
+            match self
+                .stream_until_review(&mut subscription, &event_sender)
+                .await
+            {
                 Ok(()) => {
                     debug!("Stream ended or timeout, proceeding to review");
                 }
@@ -145,15 +147,18 @@ impl ControlLoop {
 
             // Call reviewer (with retry)
             let decision = self.reviewer.review_with_retry(&context).await?;
-            
+
             // Send decision to TUI
             if let Some(ref sender) = event_sender {
-                let _ = sender.send(UiEvent::ReviewerDecision(decision.clone())).await;
+                let _ = sender
+                    .send(UiEvent::ReviewerDecision(decision.clone()))
+                    .await;
             }
 
             // Record the decision
             let retry_count = 0; // TODO: Track actual retry count
-            self.state.record_decision(sample_size, decision.clone(), retry_count);
+            self.state
+                .record_decision(sample_size, decision.clone(), retry_count);
 
             info!(
                 "Iteration {} decision: {:?} - {}",
@@ -199,10 +204,7 @@ impl ControlLoop {
             }
 
             // Use timeout to periodically check for inactivity
-            match tokio::time::timeout(
-                Duration::from_millis(100),
-                subscription.recv()
-            ).await {
+            match tokio::time::timeout(Duration::from_millis(100), subscription.recv()).await {
                 Ok(Some(event)) => {
                     event_count += 1;
                     last_event_time = Instant::now();
@@ -245,49 +247,24 @@ impl ControlLoop {
 }
 
 /// Check if an event indicates task completion
-#[cfg(unix)]
 fn is_completion_event(event: &opencode_rs::types::event::Event) -> bool {
     use opencode_rs::types::event::Event;
-    
-    match event {
-        Event::SessionCompleted { .. } => true,
-        Event::MessageCompleted { .. } => true,
-        _ => false,
-    }
-}
 
-#[cfg(windows)]
-fn is_completion_event(event: &crate::opencode_stub::types::event::Event) -> bool {
-    use crate::opencode_stub::types::event::Event;
-    
     match event {
-        Event::SessionCompleted { .. } => true,
-        Event::MessageCompleted { .. } => true,
+        Event::SessionCompacted { .. } => true,
+        Event::SessionError { .. } => true,
         _ => false,
     }
 }
 
 /// Check if an event should be sent to the UI
-#[cfg(unix)]
 fn should_send_to_ui(event: &opencode_rs::types::event::Event) -> bool {
     use opencode_rs::types::event::Event;
-    
-    match event {
-        Event::PartAdded { .. } => true,
-        Event::PartUpdated { .. } => true,
-        Event::ToolCall { .. } => true,
-        _ => false,
-    }
-}
 
-#[cfg(windows)]
-fn should_send_to_ui(event: &crate::opencode_stub::types::event::Event) -> bool {
-    use crate::opencode_stub::types::event::Event;
-    
     match event {
-        Event::PartAdded { .. } => true,
-        Event::PartUpdated { .. } => true,
-        Event::ToolCall { .. } => true,
+        Event::MessagePartUpdated { .. } => true,
+        Event::CommandExecuted { .. } => true,
+        Event::PtyUpdated { .. } => true,
         _ => false,
     }
 }

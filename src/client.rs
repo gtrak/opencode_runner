@@ -6,7 +6,7 @@ use opencode_rs::{
     sse::SseSubscription,
     types::{
         event::Event,
-        message::{Part, PartContent, PromptRequest},
+        message::{Part, PromptPart, PromptRequest},
         session::{CreateSessionRequest, Session},
     },
     Client as OpencodeClient,
@@ -43,7 +43,8 @@ impl OpenCodeClient {
 
         let request = CreateSessionRequest {
             title: Some(format!("Runner task: {}", &task[..task.len().min(50)])),
-            ..Default::default()
+            parent_id: None,
+            permission: None,
         };
 
         let session = self
@@ -57,11 +58,18 @@ impl OpenCodeClient {
 
         // Send the initial task as a prompt
         let prompt_request = PromptRequest {
-            parts: vec![Part {
-                part_type: "text".to_string(),
-                content: PartContent::Text(task.to_string()),
+            parts: vec![PromptPart::Text {
+                text: task.to_string(),
+                ignored: Some(false),
+                metadata: None,
+                synthetic: Some(false),
             }],
-            ..Default::default()
+            message_id: None,
+            model: None,
+            agent: None,
+            no_reply: Some(false),
+            system: None,
+            variant: None,
         };
 
         let response = self
@@ -94,11 +102,18 @@ impl OpenCodeClient {
         debug!("Sending message to session {}: {}", session_id, text);
 
         let request = PromptRequest {
-            parts: vec![Part {
-                part_type: "text".to_string(),
-                content: PartContent::Text(text.to_string()),
+            parts: vec![PromptPart::Text {
+                text: text.to_string(),
+                ignored: Some(false),
+                metadata: None,
+                synthetic: Some(false),
             }],
-            ..Default::default()
+            message_id: None,
+            model: None,
+            agent: None,
+            no_reply: Some(false),
+            system: None,
+            variant: None,
         };
 
         self.inner
@@ -119,15 +134,15 @@ impl OpenCodeClient {
 /// Helper function to extract text content from an event
 pub fn extract_event_text(event: &Event) -> Option<String> {
     match event {
-        Event::PartAdded { part } => {
-            if part.part_type == "text" {
-                if let PartContent::Text(text) = &part.content {
+        Event::MessagePartUpdated { properties } => {
+            if let Some(ref part) = properties.part {
+                if let Part::Text { text, .. } = part {
                     return Some(text.clone());
                 }
             }
-        }
-        Event::PartUpdated { delta, .. } => {
-            return Some(delta.clone());
+            if let Some(ref delta) = properties.delta {
+                return Some(delta.clone());
+            }
         }
         _ => {}
     }
@@ -137,7 +152,31 @@ pub fn extract_event_text(event: &Event) -> Option<String> {
 /// Helper function to extract tool call info from an event
 pub fn extract_tool_call(event: &Event) -> Option<(String, serde_json::Value)> {
     match event {
-        Event::ToolCall { name, params, .. } => Some((name.clone(), params.clone())),
-        _ => None,
+        Event::CommandExecuted { properties } => {
+            // Check if properties has a command field or if command is embedded
+            // Try to serialize properties to see what fields are available
+            let props_str = serde_json::to_string(properties).ok()?;
+            if props_str.is_empty() {
+                return None;
+            }
+
+            // Try to deserialize the command directly
+            let cmd = if let Ok(cmd) = serde_json::from_str::<String>(&props_str) {
+                cmd
+            } else {
+                // Try to parse as JSON object and find command field
+                if let Ok(obj) = serde_json::from_str::<serde_json::Value>(&props_str) {
+                    obj.get("command")
+                        .and_then(|v| v.as_str())
+                        .map(|s| s.to_string())
+                        .unwrap_or_else(|| "unknown".to_string())
+                } else {
+                    "unknown".to_string()
+                }
+            };
+            return Some((cmd, serde_json::json!({})));
+        }
+        _ => {}
     }
+    None
 }
