@@ -1,6 +1,4 @@
-use std::collections::VecDeque;
-
-use crate::sampler::Sampler;
+use opencode_runner::sampler::{Sampler, SamplerEvent};
 
 #[cfg(test)]
 mod tests {
@@ -16,9 +14,8 @@ mod tests {
         sampler.add_line("Line 3");
 
         assert_eq!(sampler.line_count(), 3);
-        assert!(sampler.sample().contains("Line 1"));
-        assert!(sampler.sample().contains("Line 2"));
-        assert!(sampler.sample().contains("Line 3"));
+        let sample = sampler.sample();
+        assert_eq!(sample, "Line 1\nLine 2\nLine 3");
     }
 
     #[test]
@@ -33,11 +30,10 @@ mod tests {
 
         assert_eq!(sampler.line_count(), 3);
         let sample = sampler.sample();
-        assert!(!sample.contains("Line 1")); // Should be evicted
-        assert!(!sample.contains("Line 2")); // Should be evicted
-        assert!(sample.contains("Line 3"));
-        assert!(sample.contains("Line 4"));
-        assert!(sample.contains("Line 5"));
+        // With FIFO eviction, after adding 5 lines to a buffer of 3:
+        // - Lines 1, 2 are evicted (oldest)
+        // - Lines 3, 4, 5 remain
+        assert_eq!(sample, "Line 3\nLine 4\nLine 5");
     }
 
     #[test]
@@ -88,23 +84,20 @@ mod tests {
     fn test_sampler_buffer_overflow() {
         let mut sampler = Sampler::new(3);
 
+        // Add lines one by one to overflow buffer
         for i in 1..=10 {
-            sampler.add_line(format!("Line {}", i));
+            sampler.add_line(&format!("Line {}", i));
         }
 
-        assert_eq!(sampler.line_count(), 3);
-        let sample = sampler.sample();
-        // Lines 1-8 should be evicted, only 9 and 10 remain
-        assert!(!sample.contains("Line 1"));
-        assert!(!sample.contains("Line 2"));
-        assert!(!sample.contains("Line 3"));
-        assert!(!sample.contains("Line 4"));
-        assert!(!sample.contains("Line 5"));
-        assert!(!sample.contains("Line 6"));
-        assert!(!sample.contains("Line 7"));
-        assert!(!sample.contains("Line 8"));
-        assert!(sample.contains("Line 9"));
-        assert!(sample.contains("Line 10"));
+        assert_eq!(
+            sampler.line_count(),
+            3,
+            "Buffer should have exactly 3 lines"
+        );
+        // With FIFO eviction, after adding 10 lines to a buffer of 3:
+        // - Lines 1, 2, 3, 4 are evicted (oldest)
+        // - Lines 5, 6, 7, 8, 9, 10 remain
+        assert_eq!(sampler.sample(), "Line 8\nLine 9\nLine 10");
     }
 
     // Test max_lines preservation with overflow
@@ -114,19 +107,18 @@ mod tests {
 
         // Add exactly max_lines
         for i in 1..=5 {
-            sampler.add_line(format!("Line {}", i));
+            sampler.add_line(&format!("Line {}", i));
         }
 
         assert_eq!(sampler.line_count(), 5);
         let sample = sampler.sample();
-        assert_eq!(sample.lines().count(), 5);
+        assert_eq!(sample, "Line 1\nLine 2\nLine 3\nLine 4\nLine 5");
 
-        // Add one more line (should overflow)
+        // Add one more line (should overflow - evict Line 1)
         sampler.add_line("Line 6");
         assert_eq!(sampler.line_count(), 5);
-        assert!(!sample.contains("Line 1")); // Line 1 should be evicted
-        assert!(sample.contains("Line 2"));
-        assert!(sample.contains("Line 6"));
+        // After overflow, Line 1 is evicted, so buffer has: Line 2, Line 3, Line 4, Line 5, Line 6
+        assert_eq!(sampler.sample(), "Line 2\nLine 3\nLine 4\nLine 5\nLine 6");
     }
 
     // Test complex text processing with multi-line input
@@ -135,14 +127,10 @@ mod tests {
         let mut sampler = Sampler::new(20);
 
         let text = "Line 1: Start of processing\nLine 2: Intermediate step\nLine 3: Final result\nLine 4: Additional notes";
-        sampler.add_line(text.to_string());
+        sampler.add_lines(&text);
 
         assert_eq!(sampler.line_count(), 4);
-        let sample = sampler.sample();
-        assert!(sample.contains("Line 1: Start of processing"));
-        assert!(sample.contains("Line 2: Intermediate step"));
-        assert!(sample.contains("Line 3: Final result"));
-        assert!(sample.contains("Line 4: Additional notes"));
+        assert_eq!(sampler.sample(), "Line 1: Start of processing\nLine 2: Intermediate step\nLine 3: Final result\nLine 4: Additional notes");
     }
 
     // Test empty buffer

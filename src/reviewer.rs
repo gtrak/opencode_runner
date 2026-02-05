@@ -208,7 +208,7 @@ impl ReviewerClient {
     }
 
     /// Build the prompt for the reviewer
-    fn build_prompt(&self, context: &ReviewerContext) -> String {
+    pub fn build_prompt(&self, context: &ReviewerContext) -> String {
         let previous_summaries = if context.previous_summaries.is_empty() {
             "No previous assessments.".to_string()
         } else {

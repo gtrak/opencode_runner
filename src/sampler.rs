@@ -4,7 +4,6 @@ use std::collections::VecDeque;
 use tracing::trace;
 
 // Mock event type for testing
-#[cfg(test)]
 #[derive(Debug, Clone)]
 pub enum SamplerEvent {
     PartAdded {
@@ -90,19 +89,17 @@ impl Sampler {
                 self.add_line(&summary);
             }
 
-            // Skip: tool results/outputs (too verbose)
-            Event::SessionCompacted { .. }
-            | Event::SessionError { .. }
-            | Event::SessionStatus { .. } => {
-                trace!("Skipping verbose event");
-            }
-
-            // Skip: error events (will be logged separately)
+            // Capture error events
             Event::SessionError { properties } => {
                 if let Some(ref error) = properties.error {
                     let error_line = format!("[Error: {:?}]", error);
                     self.add_line(&error_line);
                 }
+            }
+
+            // Skip: tool results/outputs (too verbose)
+            Event::SessionCompacted { .. } | Event::SessionStatus { .. } => {
+                trace!("Skipping verbose event");
             }
 
             // Skip: thinking/reasoning content
@@ -133,14 +130,14 @@ impl Sampler {
     }
 
     /// Add lines from text content
-    fn add_lines(&mut self, text: &str) {
+    pub fn add_lines(&mut self, text: &str) {
         for line in text.lines() {
             self.add_line(line);
         }
     }
 
     /// Add a single line to the buffer
-    fn add_line(&mut self, line: &str) {
+    pub fn add_line(&mut self, line: &str) {
         let trimmed = line.trim();
         if !trimmed.is_empty() {
             // Remove oldest line if at capacity
