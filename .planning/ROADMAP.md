@@ -2,118 +2,154 @@
 
 **Created:** 2026-02-05
 **Milestone:** v1.0 Refinement & Verification
-**Goal:** Audit implementation against specification, ensure quality, and prepare for production use.
+**Core Value:** The control loop automatically detects when an AI worker is stuck in a loop or has completed its task, preventing runaway processes and providing actionable feedback about task execution.
+
+## Overview
+
+| Phase | Name | Status | Requirements | Success Criteria |
+|-------|------|--------|--------------|------------------|
+| 1 | Specification Audit | ○ Not started | 6 | 4 |
+| 2 | Testing Infrastructure | ○ Not started | 3 | 3 |
+| 3 | Error Handling | ○ Not started | 3 | 3 |
+| 4 | Code Quality | ○ Not started | 3 | 3 |
+| 5 | Documentation | ○ Not started | 3 | 3 |
+| 6 | Release Preparation | ○ Not started | 4 | 4 |
+
+**Total:** 6 phases | 22 requirements | 20 success criteria
 
 ---
 
 ## Phase 1: Specification Audit
 
-**Goal:** Verify implementation matches plan.md specification
+**Goal:** Verify implementation matches plan.md specification and identify gaps
 
-**Requirements:** All 69 v1 requirements (verification focus)
+### Requirements Covered
 
-**Success Criteria:**
-1. Every component from plan.md exists with correct interface
-2. All CLI arguments from spec are implemented
-3. Error handling matches strategy in plan.md
-4. Data flow matches architecture diagram
-5. Default behaviors match specification
+| ID | Requirement | Status |
+|----|-------------|--------|
+| AUD-01 | Implementation audit against plan.md specification | Pending |
+| AUD-02 | Error handling completeness review | Pending |
+| AUD-03 | Testing coverage assessment | Pending |
+| AUD-04 | Documentation completeness | Pending |
+| AUD-05 | Code quality and refactoring opportunities | Pending |
+| AUD-06 | Edge case handling verification | Pending |
 
-**Deliverables:**
-- Audit report documenting deviations
-- List of gaps or missing features
-- Corrective tasks identified
+### Success Criteria
+
+1. **Specification Alignment Verified** — Every plan.md requirement has corresponding implementation in source code (100% coverage)
+2. **Gap Report Generated** — Document any missing features, discrepancies, or deviations from specification
+3. **Implementation Audit Complete** — All 69 v1 requirements verified as implemented
+4. **Edge Cases Identified** — List of edge cases not covered by current implementation
+
+### Key Outcomes
+
+- Confirmed alignment between plan.md and implementation
+- Prioritized list of gaps and refinements needed
+- Baseline for subsequent phases
 
 ---
 
 ## Phase 2: Testing Infrastructure
 
-**Goal:** Establish comprehensive test coverage
+**Goal:** Establish comprehensive test suite for core functionality
 
-**Requirements:** Testing completeness
+### Requirements Covered
 
-**Success Criteria:**
-1. Unit tests for Sampler event filtering
-2. Unit tests for Reviewer retry logic
-3. Unit tests for State management
-4. Integration tests with mock OpenCode server
-5. Integration tests with mock reviewer API
-6. Test fixtures for control loop scenarios
-7. CI-friendly test suite (headless mode)
+| ID | Requirement | Status |
+|----|-------------|--------|
+| TEST-01 | Unit tests for all modules | Pending |
+| TEST-02 | Integration tests for control loop | Pending |
+| TEST-03 | End-to-end test scenarios | Pending |
 
-**Deliverables:**
-- Test suite in tests/ directory
-- Mock implementations for external dependencies
-- Test documentation
-- CI configuration
+### Success Criteria
 
----
+1. **Unit Tests Pass** — All modules have >80% unit test coverage
+2. **Integration Tests Pass** — Control loop with reviewer interactions tested
+3. **E2E Scenarios Verified** — Complete task execution flows tested
 
-## Phase 3: Error Handling & Edge Cases
+### Key Outcomes
 
-**Goal:** Harden implementation against edge cases
-
-**Requirements:** Robustness
-
-**Success Criteria:**
-1. All error paths return meaningful messages
-2. Network failures handled gracefully
-3. Server startup failures handled
-4. SSE stream disconnection recovery
-5. Invalid reviewer responses handled
-6. Resource cleanup verified (no leaks)
-7. Timeout scenarios tested
-
-**Deliverables:**
-- Error handling audit report
-- Edge case test scenarios
-- Improved error messages
-- Recovery mechanisms verified
+- CI/CD pipeline configured with test execution
+- Test coverage reports generated
+- Regression testing enabled
 
 ---
 
-## Phase 4: Code Quality & Refactoring
+## Phase 3: Error Handling
 
-**Goal:** Improve code quality and maintainability
+**Goal:** Enhance error handling and improve resilience
 
-**Requirements:** Maintainability
+### Requirements Covered
 
-**Success Criteria:**
-1. Code follows Rust idioms consistently
-2. Documentation completeness (docstrings, examples)
-3. Clippy warnings resolved
-4. Dead code eliminated
-5. Module boundaries clear
-6. Public API documented
-7. Internal APIs have adequate context
+| ID | Requirement | Status |
+|----|-------------|--------|
+| ERR-01 | Improve error messages for common failures | Pending |
+| ERR-02 | Add retry logic for transient failures | Pending |
+| ERR-03 | Implement graceful degradation | Pending |
 
-**Deliverables:**
-- Refactored codebase
-- Documentation improvements
-- Clean clippy run
-- Architecture decision records updated
+### Success Criteria
+
+1. **User-Friendly Errors** — All error messages actionable and clear
+2. **Transient Failure Handling** — Automatic retry for network/API failures
+3. **Graceful Degradation** — System remains usable under partial failures
+
+### Key Outcomes
+
+- Better debugging experience
+- Improved reliability under failure conditions
+- Clear error escalation paths
 
 ---
 
-## Phase 5: Documentation & Examples
+## Phase 4: Code Quality
 
-**Goal:** Complete user-facing documentation
+**Goal:** Improve code quality, reduce technical debt
 
-**Requirements:** Usability
+### Requirements Covered
 
-**Success Criteria:**
-1. README.md with usage examples
-2. Configuration documentation
-3. Troubleshooting guide
-4. Example scenarios (basic, headless, complex task)
-5. API documentation (cargo doc)
-6. Changelog started
+| ID | Requirement | Status |
+|----|-------------|--------|
+| QUAL-01 | Address linting issues | Pending |
+| QUAL-02 | Refactor complex functions | Pending |
+| QUAL-03 | Optimize performance bottlenecks | Pending |
 
-**Deliverables:**
-- Complete README
-- Documentation site or mdBook
-- Example scripts/configurations
-- User guide
+### Success Criteria
+
+1. **Lint Clean** — Zero warnings from clippy and cargo check
+2. **Clean Code** — All functions <50 lines, clear naming, documented complexity
+3. **Performance Optimized** — No blocking operations in async contexts
+
+### Key Outcomes
+
+- Maintainable codebase
+- Clear code structure for future contributors
+- Performance baseline established
+
+---
+
+## Phase 5: Documentation
+
+**Goal:** Complete documentation for users and developers
+
+### Requirements Covered
+
+| ID | Requirement | Status |
+|----|-------------|--------|
+| DOCS-01 | User documentation (README, usage examples) | Pending |
+| DOCS-02 | API documentation (public interfaces) | Pending |
+| DOCS-03 | Architecture documentation | Pending |
+
+### Success Criteria
+
+1. **User Guide Complete** — README with installation, usage, and examples
+2. **API Docs Complete** — All public functions documented with rustdoc
+3. **Architecture Docs Complete** — System design documented for contributors
+
+### Key Outcomes
+
+- Usable documentation for end users
+- Clear onboarding for new developers
+- Architecture decisions recorded
 
 ---
 
@@ -121,44 +157,106 @@
 
 **Goal:** Prepare for v1.0 release
 
-**Requirements:** Production readiness
+### Requirements Covered
 
-**Success Criteria:**
-1. Version bumped to 1.0.0
-2. Cargo.toml metadata complete
-3. License file present
-4. Binary releases configured (GitHub Actions)
-5. Installation instructions tested
-6. Cross-compilation verified
-7. Final integration test passes
+| ID | Requirement | Status |
+|----|-------------|--------|
+| REL-01 | Version bump and changelog | Pending |
+| REL-02 | Build verification (all platforms) | Pending |
+| REL-03 | Security review | Pending |
+| REL-04 | Release artifacts published | Pending |
 
-**Deliverables:**
-- Git tag v1.0.0
-- Published crate (if applicable)
-- Release binaries
-- Installation verification
+### Success Criteria
+
+1. **Version Updated** — Version bumped to v1.0.0 with proper changelog
+2. **Builds Verified** — Successful builds on Unix (primary) and Windows (stubs)
+3. **Security Audited** — No critical or high vulnerabilities
+4. **Artifacts Published** — Binaries available via cargo install or releases
+
+### Key Outcomes
+
+- Production-ready v1.0 release
+- Clear versioning and release notes
+- Security baseline established
+
+---
+
+## v2 Requirements (Future)
+
+### Feedback Action
+
+| ID | Requirement | Description |
+|----|-------------|-------------|
+| FDB-01 | Reviewer feedback injection | Allow reviewer to provide specific guidance to worker |
+| FDB-02 | Message injection | Inject feedback as user message in session |
+| FDB-03 | Prompt support | Requires opencode_rs messages.prompt_async() support |
+
+### Completion Verification
+
+| ID | Requirement | Description |
+|----|-------------|-------------|
+| VER-01 | File tree verification | Explore file tree to verify task completion |
+| VER-02 | Test validation | Run tests or linting to validate output |
+| VER-03 | Change detection | Check for expected file changes |
+
+### Notifications
+
+| ID | Requirement | Description |
+|----|-------------|-------------|
+| NOTF-01 | Completion notifications | Send notification on task completion/failure |
+| NOTF-02 | Webhook support | Support webhook callbacks |
+| NOTF-03 | Configurable endpoints | Configurable notification endpoints |
+
+---
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| Multi-session forking | Complex parallel execution, not core to control loop value |
+| Plugin architecture | Premature abstraction, current use cases covered |
+| Persistent state save/load | Not required for current CI/automation use cases |
+| Scheduled/background execution | Separate cron/systemd concern |
+| Configuration file support | CLI args sufficient for current needs |
+| Real-time collaboration | Single-user tool by design |
+| Feedback action | Requires opencode_rs message support |
+| Completion verification via file tree | Deferred to future milestone |
 
 ---
 
 ## Traceability
 
-| Phase | Goal | Requirements | Success Criteria |
-|-------|------|--------------|------------------|
-| 1 | Audit spec compliance | All 69 v1 | 5 criteria |
-| 2 | Testing infrastructure | Testing completeness | 7 criteria |
-| 3 | Error handling | Robustness | 7 criteria |
-| 4 | Code quality | Maintainability | 7 criteria |
-| 5 | Documentation | Usability | 6 criteria |
-| 6 | Release | Production readiness | 7 criteria |
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| AUD-01 | Phase 1 | Pending |
+| AUD-02 | Phase 1 | Pending |
+| AUD-03 | Phase 1 | Pending |
+| AUD-04 | Phase 1 | Pending |
+| AUD-05 | Phase 1 | Pending |
+| AUD-06 | Phase 1 | Pending |
+| TEST-01 | Phase 2 | Pending |
+| TEST-02 | Phase 2 | Pending |
+| TEST-03 | Phase 2 | Pending |
+| ERR-01 | Phase 3 | Pending |
+| ERR-02 | Phase 3 | Pending |
+| ERR-03 | Phase 3 | Pending |
+| QUAL-01 | Phase 4 | Pending |
+| QUAL-02 | Phase 4 | Pending |
+| QUAL-03 | Phase 4 | Pending |
+| DOCS-01 | Phase 5 | Pending |
+| DOCS-02 | Phase 5 | Pending |
+| DOCS-03 | Phase 5 | Pending |
+| REL-01 | Phase 6 | Pending |
+| REL-02 | Phase 6 | Pending |
+| REL-03 | Phase 6 | Pending |
+| REL-04 | Phase 6 | Pending |
 
----
-
-## Current Position
-
-**Current Phase:** Not started
-**Next Phase:** Phase 1 - Specification Audit
-**Status:** Ready to begin refinement
+**Coverage:**
+- v1 refinement requirements: 22 total
+- Mapped to phases: 22
+- Unmapped: 0 ✓
 
 ---
 
 *Roadmap created: 2026-02-05*
+*Last updated: 2026-02-05 after project state analysis*

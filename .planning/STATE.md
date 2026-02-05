@@ -50,6 +50,8 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 | Phase 5: Documentation | ○ Not started | 0% | None |
 | Phase 6: Release Preparation | ○ Not started | 0% | None |
 
+**Roadmap:** ✓ Created (2026-02-05) — 6 phases, 22 refinement requirements
+
 ## Active Decisions
 
 (None yet — awaiting Phase 1)
