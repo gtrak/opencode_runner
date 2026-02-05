@@ -147,43 +147,35 @@ impl Sampler {
             self.buffer.push_back(trimmed.to_string());
         }
     }
-}
 
-/// Extract text content from part
-fn extract_text_content(part: &opencode_rs::types::message::Part) -> Option<String> {
-    match part {
-        Part::Text { text, .. } => Some(text.clone()),
-        _ => None,
-    }
-}
-
-#[cfg(test)]
-/// Test-only method to process SamplerEvent for unit tests
-pub fn process_sampler_event(mut self: &mut Sampler, event: SamplerEvent) {
-    match event {
-        SamplerEvent::PartAdded { text } => {
-            self.add_lines(&text);
-        }
-        SamplerEvent::PartUpdated { delta } => {
-            self.add_lines(delta);
-        }
-        SamplerEvent::ToolCall { name, params } => {
-            let summary = format!(
-                "[Tool: {}({})]",
-                name,
-                serde_json::to_string(params).unwrap_or_else(|_| "{}".to_string())
-            );
-            self.add_line(&summary);
-        }
-        SamplerEvent::ToolResult { .. } => {
-            // Skip tool results in tests
-        }
-        SamplerEvent::Error { error } => {
-            let error_line = format!("[Error: {}]", error);
-            self.add_line(&error_line);
-        }
-        SamplerEvent::Thinking { .. } => {
-            // Skip thinking in tests
+    /// Test-only method to process SamplerEvent for unit tests
+    #[cfg(test)]
+    pub fn process_sampler_event(&mut self, event: SamplerEvent) {
+        match event {
+            SamplerEvent::PartAdded { text } => {
+                self.add_lines(&text);
+            }
+            SamplerEvent::PartUpdated { delta } => {
+                self.add_lines(&delta);
+            }
+            SamplerEvent::ToolCall { name, params } => {
+                let summary = format!(
+                    "[Tool: {}({})]",
+                    name,
+                    serde_json::to_string(&params).unwrap_or_else(|_| "{}".to_string())
+                );
+                self.add_line(&summary);
+            }
+            SamplerEvent::ToolResult { .. } => {
+                // Skip tool results in tests
+            }
+            SamplerEvent::Error { error } => {
+                let error_line = format!("[Error: {}]", error);
+                self.add_line(&error_line);
+            }
+            SamplerEvent::Thinking { .. } => {
+                // Skip thinking in tests
+            }
         }
     }
 }

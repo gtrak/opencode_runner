@@ -6,14 +6,14 @@ use tokio::time::sleep;
 use tracing::{debug, error, info, warn};
 
 /// Decision from the reviewer
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ReviewerDecision {
     pub action: ReviewerAction,
     pub reason: String,
 }
 
 /// Possible reviewer actions
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum ReviewerAction {
     /// Worker is making progress, continue
@@ -36,10 +36,10 @@ pub struct ReviewerContext {
 
 /// Client for the reviewer API (OpenAI-compatible)
 pub struct ReviewerClient {
-    http_client: HttpClient,
-    base_url: String,
-    model: String,
-    max_retries: u8,
+    pub http_client: HttpClient,
+    pub base_url: String,
+    pub model: String,
+    pub max_retries: u8,
 }
 
 /// OpenAI-compatible chat message
