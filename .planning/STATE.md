@@ -8,11 +8,14 @@
 - Headless mode available via --headless flag
 - OpenCode server spawning via process manager
 - OpenAI-compatible reviewer API integration
+- CLI argument parsing using clap
+- Configuration management via config.rs module
+- Environment variable handling via environment.rs module
 - All three Phase 01 plans completed (Core Setup, Configuration, Testing)
 
 **Completed Plans:**
 - 01-core-infrastructure-core-setup - Core project infrastructure, dependencies, and main.rs
-- 02-core-infrastructure-configuration - Configuration management and validation
+- 02-core-infrastructure-configuration - Configuration management and CLI integration
 - 03-core-infrastructure-testing - Test infrastructure setup
 
 **Pending Todos:**
