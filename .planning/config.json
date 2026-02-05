@@ -1,7 +1,0 @@
-{
-  "version": "1.0.0",
-  "model_profile": "balanced",
-  "commit_docs": true,
-  "project_type": "rust",
-  "milestone": "v1.0-refinement"
-}
